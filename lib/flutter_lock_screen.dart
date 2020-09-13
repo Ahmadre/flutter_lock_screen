@@ -12,12 +12,13 @@ typedef Future<bool> PassCodeVerify(List<int> passcode);
 class LockScreen extends StatefulWidget {
   final VoidCallback onSuccess;
   final VoidCallback fingerFunction;
+  final Widget buttonChild;
+  final bool verifyButtonEnabled;
   final bool fingerVerify;
   final String title;
+  final TextStyle titleTextStyle;
+  final Widget subtitle;
   final Color titleIconColor;
-  final Color titleFontColor;
-  final String titleFontFamily;
-  final String subtitleFontFamily;
   final int passLength;
   final bool showWrongPassDialog;
   final bool showFingerPass;
@@ -37,10 +38,12 @@ class LockScreen extends StatefulWidget {
   LockScreen({
     this.onSuccess,
     this.title,
+    this.titleTextStyle = const TextStyle(
+      color: Colors.white,
+      fontFamily: "Open Sans",
+    ),
+    this.subtitle,
     this.titleIconColor = Colors.white,
-    this.titleFontColor = Colors.white,
-    this.titleFontFamily = "Open Sans",
-    this.subtitleFontFamily = "Open Sans",
     this.borderColor,
     this.foregroundColor = Colors.transparent,
     this.passLength,
@@ -58,7 +61,9 @@ class LockScreen extends StatefulWidget {
     this.wrongPassTitle,
     this.wrongPassContent,
     this.wrongPassCancelButtonText,
-  })  : assert(title != null),
+    this.buttonChild,
+    this.verifyButtonEnabled = false,
+  })  : assert(subtitle != null),
         assert(passLength <= 8),
         assert(bgImage != null),
         assert(borderColor != null),
@@ -99,54 +104,7 @@ class _LockScreenState extends State<LockScreen> {
       });
 
       if (_currentCodeLength == widget.passLength) {
-        widget.passCodeVerify(_inputCodes).then((onValue) {
-          if (onValue) {
-            setState(() {
-              _currentState = 1;
-            });
-            new Timer(new Duration(milliseconds: 200), () {
-              widget.onSuccess();
-            });
-          } else {
-            _currentState = 2;
-            new Timer(new Duration(milliseconds: 1000), () {
-              setState(() {
-                _currentState = 0;
-                _currentCodeLength = 0;
-                _inputCodes.clear();
-              });
-            });
-            if (widget.showWrongPassDialog) {
-              showDialog(
-                  barrierDismissible: false,
-                  context: context,
-                  builder: (BuildContext context) {
-                    return Center(
-                      child: AlertDialog(
-                        title: Text(
-                          widget.wrongPassTitle,
-                          style: TextStyle(
-                              color: Colors.black, fontFamily: "Open Sans"),
-                        ),
-                        content: Text(
-                          widget.wrongPassContent,
-                          style: TextStyle(fontFamily: "Open Sans"),
-                        ),
-                        actions: <Widget>[
-                          FlatButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(
-                              widget.wrongPassCancelButtonText,
-                              style: TextStyle(color: Colors.blue),
-                            ),
-                          )
-                        ],
-                      ),
-                    );
-                  });
-            }
-          }
-        });
+        if (widget.buttonChild == null) _verifyPassCode();
       }
     }
   }
@@ -177,6 +135,59 @@ class _LockScreenState extends State<LockScreen> {
     });
   }
 
+  _verifyPassCode() {
+    widget.passCodeVerify(_inputCodes).then(
+      (onValue) {
+        if (onValue) {
+          setState(() {
+            _currentState = 1;
+          });
+          new Timer(new Duration(milliseconds: 200), () {
+            widget.onSuccess();
+          });
+        } else {
+          _currentState = 2;
+          new Timer(new Duration(milliseconds: 1000), () {
+            setState(() {
+              _currentState = 0;
+              _currentCodeLength = 0;
+              _inputCodes.clear();
+            });
+          });
+          if (widget.showWrongPassDialog) {
+            showDialog(
+              barrierDismissible: false,
+              context: context,
+              builder: (BuildContext context) {
+                return Center(
+                  child: AlertDialog(
+                    title: Text(
+                      widget.wrongPassTitle,
+                      style: TextStyle(color: Colors.black, fontFamily: "Open Sans"),
+                    ),
+                    content: Text(
+                      widget.wrongPassContent,
+                      style: TextStyle(fontFamily: "Open Sans"),
+                    ),
+                    actions: <Widget>[
+                      FlatButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          widget.wrongPassCancelButtonText,
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+            );
+          }
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Future.delayed(Duration(milliseconds: 200), () {
@@ -198,51 +209,40 @@ class _LockScreenState extends State<LockScreen> {
                       color: widget.numBackgroundColor,
                     ),
                     child: Stack(
-                      children: <Widget>[Container(
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width,
-                            child: SafeArea(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(
-                                      _currentState != 1
-                                          ? Icons.lock
-                                          : Icons.lock_open,
-                                      size: 36,
-                                      color: widget.titleIconColor),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  CodePanel(
-                                    codeLength: widget.passLength,
-                                    currentLength: _currentCodeLength,
-                                    borderColor: widget.borderColor,
-                                    foregroundColor: widget.foregroundColor,
-                                    deleteCode: _deleteCode,
-                                    fingerVerify: widget.fingerVerify,
-                                    status: _currentState,
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  Text(
-                                    "TYPE PASSCODE",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontFamily: widget.subtitleFontFamily),
-                                  ),
-                                ],
-                              ),
+                      children: <Widget>[
+                        Container(
+                          height: MediaQuery.of(context).size.height,
+                          width: MediaQuery.of(context).size.width,
+                          child: SafeArea(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(_currentState != 1 ? Icons.lock : Icons.lock_open,
+                                    size: 36, color: widget.titleIconColor),
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                CodePanel(
+                                  codeLength: widget.passLength,
+                                  currentLength: _currentCodeLength,
+                                  borderColor: widget.borderColor,
+                                  foregroundColor: widget.foregroundColor,
+                                  deleteCode: _deleteCode,
+                                  fingerVerify: widget.fingerVerify,
+                                  status: _currentState,
+                                ),
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                widget.subtitle,
+                              ],
                             ),
                           ),
-                        
+                        ),
                         widget.showFingerPass
                             ? Positioned(
-                                top: MediaQuery.of(context).size.height /
-                                    (Platform.isIOS ? 4 : 5),
+                                top: MediaQuery.of(context).size.height / (Platform.isIOS ? 4 : 5),
                                 left: 20,
                                 bottom: 10,
                                 child: GestureDetector(
@@ -263,46 +263,64 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                 ),
                 Expanded(
-                  flex: Platform.isIOS ? 5 : 6,
+                  flex: Platform.isIOS ? 6 : 7,
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: 1200,
-                      maxWidth: 600
-                    ),
-                    child: Container(
-                    padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * .1, top: 0, right: MediaQuery.of(context).size.width * .1),
-                    child:
-                        NotificationListener<OverscrollIndicatorNotification>(
-                      onNotification: (overscroll) {
-                        overscroll.disallowGlow();
-                      },
-                      child: GridView.count(
-                        physics: NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        crossAxisCount: 3,
-                        childAspectRatio: 1.1,
-                        crossAxisSpacing: 15,
-                        mainAxisSpacing: 15,
-                        padding: EdgeInsets.only(bottom: 50),
-                        children: <Widget>[
-                          buildContainerCircle(1),
-                          buildContainerCircle(2),
-                          buildContainerCircle(3),
-                          buildContainerCircle(4),
-                          buildContainerCircle(5),
-                          buildContainerCircle(6),
-                          buildContainerCircle(7),
-                          buildContainerCircle(8),
-                          buildContainerCircle(9),
-                          buildRemoveIcon(Icons.close),
-                          buildContainerCircle(0),
-                          buildContainerIcon(Icons.arrow_back),
-                        ],
-                      ),
+                    constraints: BoxConstraints(maxHeight: 800, maxWidth: 400),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.only(
+                              left: MediaQuery.of(context).size.width * .1,
+                              top: 0,
+                              right: MediaQuery.of(context).size.width * .1),
+                          child: NotificationListener<OverscrollIndicatorNotification>(
+                            onNotification: (overscroll) {
+                              overscroll.disallowGlow();
+                            },
+                            child: GridView.count(
+                              physics: NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              crossAxisCount: 3,
+                              childAspectRatio: 1.1,
+                              crossAxisSpacing: 15,
+                              mainAxisSpacing: 15,
+                              padding: EdgeInsets.only(bottom: 50),
+                              children: <Widget>[
+                                buildContainerCircle(1),
+                                buildContainerCircle(2),
+                                buildContainerCircle(3),
+                                buildContainerCircle(4),
+                                buildContainerCircle(5),
+                                buildContainerCircle(6),
+                                buildContainerCircle(7),
+                                buildContainerCircle(8),
+                                buildContainerCircle(9),
+                                buildRemoveIcon(Icons.close),
+                                buildContainerCircle(0),
+                                buildContainerIcon(Icons.arrow_back),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (widget.buttonChild != null)
+                          Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 56,
+                            padding: EdgeInsets.symmetric(horizontal: 50),
+                            child: OutlineButton(
+                              onPressed: (!widget.verifyButtonEnabled || _currentCodeLength < widget.passLength)
+                                  ? null
+                                  : () => _verifyPassCode(),
+                              child: widget.buttonChild,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  ),
-                )
+                ),
               ],
             ),
           ),
@@ -335,10 +353,7 @@ class _LockScreenState extends State<LockScreen> {
           child: Text(
             number.toString(),
             style: TextStyle(
-                fontSize: 28,
-                fontFamily: widget.numFontFamily,
-                fontWeight: FontWeight.normal,
-                color: widget.numColor),
+                fontSize: 28, fontFamily: widget.numFontFamily, fontWeight: FontWeight.normal, color: widget.numColor),
           ),
         ),
       ),
@@ -424,7 +439,7 @@ class CodePanel extends StatelessWidget {
   final borderColor;
   final bool fingerVerify;
   final foregroundColor;
-  final H = 60.0;
+  final H = 30.0;
   final W = 30.0;
   final DeleteCode deleteCode;
   final int status;
@@ -457,8 +472,8 @@ class CodePanel extends StatelessWidget {
             child: new Container(
               height: H,
               decoration: new BoxDecoration(
-                shape: BoxShape.rectangle,
-                border: new Border.all(color: color, width: 1.0),
+                shape: BoxShape.circle,
+                border: new Border.all(color: color, width: 0.8),
                 color: Colors.green.shade500,
               ),
             ),
@@ -481,22 +496,26 @@ class CodePanel extends StatelessWidget {
               child: Container(
                 height: H,
                 decoration: new BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    border: new Border.all(color: color, width: 2.0),
-                    color: foregroundColor),
+                  shape: BoxShape.circle,
+                  border: new Border.all(color: color, width: 0.8),
+                  color: foregroundColor,
+                ),
               )));
         } else {
-          circles.add(new SizedBox(
+          circles.add(
+            new SizedBox(
               width: W,
               height: H,
               child: new Container(
                 height: H,
                 decoration: new BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  border: new Border.all(color: color, width: 1.0),
+                  shape: BoxShape.circle,
+                  border: new Border.all(color: color, width: 0.8),
                   color: color,
                 ),
-              )));
+              ),
+            ),
+          );
         }
       }
     }
@@ -504,15 +523,17 @@ class CodePanel extends StatelessWidget {
     return new SizedBox.fromSize(
       size: new Size(MediaQuery.of(context).size.width, H),
       child: new Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SizedBox.fromSize(
-                size: new Size(40.0 * codeLength, H),
-                child: new Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: circles,
-                )),
-          ]),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          SizedBox.fromSize(
+            size: new Size(40.0 * codeLength, H),
+            child: new Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: circles,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
