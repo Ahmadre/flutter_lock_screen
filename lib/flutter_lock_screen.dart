@@ -195,133 +195,126 @@ class _LockScreenState extends State<LockScreen> {
     });
     return Scaffold(
       backgroundColor: widget.numBackgroundColor,
-      body: Stack(
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: widget.numBackgroundColor,
-                    ),
-                    child: Stack(
-                      children: <Widget>[
-                        Container(
-                          height: MediaQuery.of(context).size.height,
-                          width: MediaQuery.of(context).size.width,
-                          child: SafeArea(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Icon(_currentState != 1 ? Icons.lock : Icons.lock_open,
-                                    size: 36, color: widget.titleIconColor),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                                CodePanel(
-                                  codeLength: widget.passLength,
-                                  currentLength: _currentCodeLength,
-                                  borderColor: widget.borderColor,
-                                  foregroundColor: widget.foregroundColor,
-                                  deleteCode: _deleteCode,
-                                  fingerVerify: widget.fingerVerify,
-                                  status: _currentState,
-                                ),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                                widget.subtitle,
-                              ],
-                            ),
+          Flexible(
+            flex: 3,
+            child: Container(
+              decoration: BoxDecoration(
+                color: widget.numBackgroundColor,
+              ),
+              child: Stack(
+                children: <Widget>[
+                  Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    child: SafeArea(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(_currentState != 1 ? Icons.lock : Icons.lock_open,
+                              size: 36, color: widget.titleIconColor),
+                          SizedBox(
+                            height: 20,
                           ),
-                        ),
-                        widget.showFingerPass
-                            ? Positioned(
-                                top: MediaQuery.of(context).size.height / (Platform.isIOS ? 4 : 5),
-                                left: 20,
-                                bottom: 10,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    widget.fingerFunction();
-                                  },
-                                  child: Image.asset(
-                                    widget.fingerPrintImage,
-                                    height: 40,
-                                    width: 40,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Container(),
-                      ],
+                          CodePanel(
+                            codeLength: widget.passLength,
+                            currentLength: _currentCodeLength,
+                            borderColor: widget.borderColor,
+                            foregroundColor: widget.foregroundColor,
+                            deleteCode: _deleteCode,
+                            fingerVerify: widget.fingerVerify,
+                            status: _currentState,
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          widget.subtitle,
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: Platform.isIOS ? 6 : 7,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: 800, maxWidth: 400),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.only(
-                              left: MediaQuery.of(context).size.width * .1,
-                              top: 0,
-                              right: MediaQuery.of(context).size.width * .1),
-                          child: NotificationListener<OverscrollIndicatorNotification>(
-                            onNotification: (overscroll) {
-                              overscroll.disallowGlow();
+                  widget.showFingerPass
+                      ? Positioned(
+                          top: MediaQuery.of(context).size.height / (Platform.isIOS ? 4 : 5),
+                          left: 20,
+                          bottom: 10,
+                          child: GestureDetector(
+                            onTap: () {
+                              widget.fingerFunction();
                             },
-                            child: GridView.count(
-                              physics: NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              crossAxisCount: 3,
-                              childAspectRatio: 1.1,
-                              crossAxisSpacing: 15,
-                              mainAxisSpacing: 15,
-                              padding: EdgeInsets.only(bottom: 50),
-                              children: <Widget>[
-                                buildContainerCircle(1),
-                                buildContainerCircle(2),
-                                buildContainerCircle(3),
-                                buildContainerCircle(4),
-                                buildContainerCircle(5),
-                                buildContainerCircle(6),
-                                buildContainerCircle(7),
-                                buildContainerCircle(8),
-                                buildContainerCircle(9),
-                                buildRemoveIcon(Icons.close),
-                                buildContainerCircle(0),
-                                buildContainerIcon(Icons.arrow_back),
-                              ],
+                            child: Image.asset(
+                              widget.fingerPrintImage,
+                              height: 40,
+                              width: 40,
+                              color: Colors.white,
                             ),
                           ),
-                        ),
-                        if (widget.buttonChild != null)
-                          Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: 56,
-                            padding: EdgeInsets.symmetric(horizontal: 50),
-                            child: OutlineButton(
-                              onPressed: (!widget.verifyButtonEnabled || _currentCodeLength < widget.passLength)
-                                  ? null
-                                  : () => _verifyPassCode(),
-                              child: widget.buttonChild,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                            ),
-                          ),
-                      ],
+                        )
+                      : Container(),
+                ],
+              ),
+            ),
+          ),
+          Flexible(
+            flex: 7,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: 850, maxWidth: 400),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(
+                        left: MediaQuery.of(context).size.width * .1,
+                        top: 0,
+                        right: MediaQuery.of(context).size.width * .1),
+                    child: NotificationListener<OverscrollIndicatorNotification>(
+                      onNotification: (overscroll) {
+                        overscroll.disallowGlow();
+                      },
+                      child: GridView.count(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        crossAxisCount: 3,
+                        childAspectRatio: 1.1,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        padding: EdgeInsets.only(bottom: 30),
+                        children: <Widget>[
+                          buildContainerCircle(1),
+                          buildContainerCircle(2),
+                          buildContainerCircle(3),
+                          buildContainerCircle(4),
+                          buildContainerCircle(5),
+                          buildContainerCircle(6),
+                          buildContainerCircle(7),
+                          buildContainerCircle(8),
+                          buildContainerCircle(9),
+                          buildRemoveIcon(Icons.close),
+                          buildContainerCircle(0),
+                          buildContainerIcon(Icons.arrow_back),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  if (widget.buttonChild != null)
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: 56,
+                      padding: EdgeInsets.symmetric(horizontal: 50),
+                      child: OutlineButton(
+                        onPressed: (!widget.verifyButtonEnabled || _currentCodeLength < widget.passLength)
+                            ? null
+                            : () => _verifyPassCode(),
+                        child: widget.buttonChild,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
